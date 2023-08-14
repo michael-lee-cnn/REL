@@ -7,9 +7,7 @@ n_words = []
 time_md = []
 time_ed = []
 
-with open(
-    "{}/generated/efficiency_gpu.txt".format(base_url), "r", encoding="utf-8"
-) as f:
+with open('{}/generated/efficiency_gpu.txt'.format(base_url), 'r', encoding='utf-8') as f:
     for line in f:
         splt = line.split()
 
@@ -19,21 +17,13 @@ with open(
         time_ed.append(float(splt[3]))
 
 
-print("statistics words", np.round(np.mean(n_words)), np.round(np.std(n_words)))
+print('statistics words', np.round(np.mean(n_words)), np.round(np.std(n_words)))
 print(
-    "statistics mentions found",
-    np.round(np.mean(n_mentions)),
-    np.round(np.std(n_mentions)),
+    'statistics mentions found', np.round(np.mean(n_mentions)), np.round(np.std(n_mentions)),
 )
 print(
-    "statistics time md",
-    np.round(np.mean(time_md), 4),
-    np.round(np.std(time_md), 4),
-    np.sum(time_md),
+    'statistics time md', np.round(np.mean(time_md), 4), np.round(np.std(time_md), 4), np.sum(time_md),
 )
 print(
-    "statistics time ed",
-    np.round(np.mean(time_ed), 4),
-    np.round(np.std(time_ed), 4),
-    np.sum(time_ed),
+    'statistics time ed', np.round(np.mean(time_ed), 4), np.round(np.std(time_ed), 4), np.sum(time_ed),
 )

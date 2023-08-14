@@ -2,15 +2,15 @@ import re
 
 LOWER = False
 DIGIT_0 = False
-UNK_TOKEN = "#UNK#"
+UNK_TOKEN = '#UNK#'
 
 BRACKETS = {
-    "-LCB-": "{",
-    "-LRB-": "(",
-    "-LSB-": "[",
-    "-RCB-": "}",
-    "-RRB-": ")",
-    "-RSB-": "]",
+    '-LCB-': '{',
+    '-LRB-': '(',
+    '-LSB-': '[',
+    '-RCB-': '}',
+    '-RRB-': ')',
+    '-RSB-': ']',
 }
 
 """
@@ -38,13 +38,13 @@ class Vocabulary:
         :return: Normalised token
         """
 
-        if token in [Vocabulary.unk_token, "<s>", "</s>"]:
+        if token in [Vocabulary.unk_token, '<s>', '</s>']:
             return token
         elif token in BRACKETS:
             token = BRACKETS[token]
         else:
             if digit_0:
-                token = re.sub("[0-9]", "0", token)
+                token = re.sub('[0-9]', '0', token)
 
         if lower:
             return token.lower()

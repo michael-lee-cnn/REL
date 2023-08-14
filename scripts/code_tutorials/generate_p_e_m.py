@@ -5,7 +5,7 @@ base_url = ""
 wiki_version = ""
 
 # 1. Import helper functions; store p(e|m) index etc in class.
-print("Loading wikipedia files")
+print('Loading wikipedia files')
 wikipedia = Wikipedia(base_url, wiki_version)
 
 # 2. Init class

@@ -9,12 +9,12 @@ def example_preprocessing():
     text = """Obama will visit Germany. And have a meeting with Merkel tomorrow.
     Obama will visit Germany. And have a meeting with Merkel tomorrow. Go all the way or blah blah Charles Bukowski."""
     spans = []  # [(0, 5), (17, 7), (50, 6)]
-    processed = {"test_doc": [text, spans], "test_doc2": [text, spans]}
+    processed = {'test_doc': [text, spans], 'test_doc2': [text, spans]}
     return processed
 
 
-base_url = "/users/vanhulsm/Desktop/projects/data"
-wiki_version = "wiki_2014"
+base_url = '/users/vanhulsm/Desktop/projects/data'
+wiki_version = 'wiki_2014'
 
 # 1. Input sentences when using Flair.
 input_text = example_preprocessing()
@@ -28,15 +28,15 @@ mention_detection = MentionDetection(base_url, wiki_version)
 mentions_dataset, n_mentions = mention_detection.format_spans(input_text)
 
 # 2. Alternative MD module is using an n-gram tagger.
-tagger_ner = load_flair_ner("ner-fast")
+tagger_ner = load_flair_ner('ner-fast')
 # tagger_ngram = Cmns(base_url, wiki_version, n=5)
 
 mentions_dataset, n_mentions = mention_detection.find_mentions(input_text, tagger_ner)
 
 # 3. Load model.
 config = {
-    "mode": "eval",
-    "model_path": "{}/{}/generated/model".format(base_url, wiki_version),
+    'mode': 'eval',
+    'model_path': '{}/{}/generated/model'.format(base_url, wiki_version),
 }
 model = EntityDisambiguation(base_url, wiki_version, config)
 

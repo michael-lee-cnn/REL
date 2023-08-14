@@ -6,7 +6,7 @@ from flair.models import SequenceTagger
 from REL.mention_detection import MentionDetection
 from REL.utils import process_results
 
-API_DOC = "API_DOC"
+API_DOC = 'API_DOC'
 
 """
 Class/function combination that is used to setup an API that can be used for e.g. GERBIL evaluation.
@@ -31,17 +31,7 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
             self.send_response(200)
             self.end_headers()
             self.wfile.write(
-                bytes(
-                    json.dumps(
-                        {
-                            "schemaVersion": 1,
-                            "label": "status",
-                            "message": "up",
-                            "color": "green",
-                        }
-                    ),
-                    "utf-8",
-                )
+                bytes(json.dumps({'schemaVersion': 1, 'label': 'status', 'message': 'up', 'color': 'green',}), 'utf-8',)
             )
             return
 
@@ -49,7 +39,7 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
             # send bad request response code
             self.send_response(400)
             self.end_headers()
-            self.wfile.write(bytes(json.dumps([]), "utf-8"))
+            self.wfile.write(bytes(json.dumps([]), 'utf-8'))
             return
 
         def do_POST(self):
@@ -59,7 +49,7 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
             :return:
             """
             try:
-                content_length = int(self.headers["Content-Length"])
+                content_length = int(self.headers['Content-Length'])
                 post_data = self.rfile.read(content_length)
                 self.send_response(200)
                 self.end_headers()
@@ -67,12 +57,12 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
                 text, spans = self.read_json(post_data)
                 response = self.generate_response(text, spans)
 
-                self.wfile.write(bytes(json.dumps(response), "utf-8"))
+                self.wfile.write(bytes(json.dumps(response), 'utf-8'))
             except Exception as e:
-                print(f"Encountered exception: {repr(e)}")
+                print(f'Encountered exception: {repr(e)}')
                 self.send_response(400)
                 self.end_headers()
-                self.wfile.write(bytes(json.dumps([]), "utf-8"))
+                self.wfile.write(bytes(json.dumps([]), 'utf-8'))
             return
 
         def read_json(self, post_data):
@@ -82,16 +72,16 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
             :return: document text and spans.
             """
 
-            data = json.loads(post_data.decode("utf-8"))
-            text = data["text"]
-            text = text.replace("&amp;", "&")
+            data = json.loads(post_data.decode('utf-8'))
+            text = data['text']
+            text = text.replace('&amp;', '&')
 
             # GERBIL sends dictionary, users send list of lists.
-            if "spans" in data:
+            if 'spans' in data:
                 try:
-                    spans = [list(d.values()) for d in data["spans"]]
+                    spans = [list(d.values()) for d in data['spans']]
                 except Exception:
-                    spans = data["spans"]
+                    spans = data['spans']
                     pass
             else:
                 spans = []
@@ -111,15 +101,11 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
             if len(spans) > 0:
                 # ED.
                 processed = {API_DOC: [text, spans]}
-                mentions_dataset, total_ment = self.mention_detection.format_spans(
-                    processed
-                )
+                mentions_dataset, total_ment = self.mention_detection.format_spans(processed)
             else:
                 # EL
                 processed = {API_DOC: [text, spans]}
-                mentions_dataset, total_ment = self.mention_detection.find_mentions(
-                    processed, self.tagger_ner
-                )
+                mentions_dataset, total_ment = self.mention_detection.find_mentions(processed, self.tagger_ner)
 
             # Disambiguation
             predictions, timing = self.model.predict(mentions_dataset)
@@ -141,7 +127,7 @@ def make_handler(base_url, wiki_version, model, tagger_ner):
     return GetHandler
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     import argparse
     from http.server import HTTPServer
 
@@ -149,26 +135,21 @@ if __name__ == "__main__":
     from REL.ner import load_flair_ner
 
     p = argparse.ArgumentParser()
-    p.add_argument("base_url")
-    p.add_argument("wiki_version")
-    p.add_argument("--ed-model", default="ed-wiki-2019")
-    p.add_argument("--ner-model", default="ner-fast")
-    p.add_argument("--bind", "-b", metavar="ADDRESS", default="0.0.0.0")
-    p.add_argument("--port", "-p", default=5555, type=int)
+    p.add_argument('base_url')
+    p.add_argument('wiki_version')
+    p.add_argument('--ed-model', default='ed-wiki-2019')
+    p.add_argument('--ner-model', default='ner-fast')
+    p.add_argument('--bind', '-b', metavar='ADDRESS', default='0.0.0.0')
+    p.add_argument('--port', '-p', default=5555, type=int)
     args = p.parse_args()
 
     ner_model = load_flair_ner(args.ner_model)
-    ed_model = EntityDisambiguation(
-        args.base_url, args.wiki_version, {"mode": "eval", "model_path": args.ed_model}
-    )
+    ed_model = EntityDisambiguation(args.base_url, args.wiki_version, {'mode': 'eval', 'model_path': args.ed_model})
     server_address = (args.bind, args.port)
-    server = HTTPServer(
-        server_address,
-        make_handler(args.base_url, args.wiki_version, ed_model, ner_model),
-    )
+    server = HTTPServer(server_address, make_handler(args.base_url, args.wiki_version, ed_model, ner_model),)
 
     try:
-        print("Ready for listening.")
+        print('Ready for listening.')
         server.serve_forever()
     except KeyboardInterrupt:
         exit(0)

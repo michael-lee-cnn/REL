@@ -41,21 +41,19 @@ class MentionDetection(MentionDetectionBase):
                     # end_pos = start_pos + length
                     # ngram = text[start_pos:end_pos]
                     mention = self.preprocess_mention(ngram)
-                    left_ctxt, right_ctxt = self.get_ctxt(
-                        start_pos, end_pos, idx_sent, sentence, sentences_doc
-                    )
+                    left_ctxt, right_ctxt = self.get_ctxt(start_pos, end_pos, idx_sent, sentence, sentences_doc)
 
                     chosen_cands = self.get_candidates(mention)
                     res = {
-                        "mention": mention,
-                        "context": (left_ctxt, right_ctxt),
-                        "candidates": chosen_cands,
-                        "gold": ["NONE"],
-                        "pos": start_pos,
-                        "sent_idx": idx_sent,
-                        "ngram": ngram,
-                        "end_pos": end_pos,
-                        "sentence": sentence,
+                        'mention': mention,
+                        'context': (left_ctxt, right_ctxt),
+                        'candidates': chosen_cands,
+                        'gold': ['NONE'],
+                        'pos': start_pos,
+                        'sent_idx': idx_sent,
+                        'ngram': ngram,
+                        'end_pos': end_pos,
+                        'sentence': sentence,
                     }
 
                     results_doc.append(res)
@@ -91,15 +89,11 @@ class MentionDetection(MentionDetectionBase):
 
                 # ngram, start_pos, end_pos
                 spans_sent = [
-                    [text[x[0] : x[0] + x[1]], x[0], x[0] + x[1]]
-                    for x in spans
-                    if pos_start <= x[0] < pos_end
+                    [text[x[0] : x[0] + x[1]], x[0], x[0] + x[1]] for x in spans if pos_start <= x[0] < pos_end
                 ]
                 res[doc][i] = [sent, spans_sent]
                 if len(spans) == 0:
-                    processed_sentences.append(
-                        Sentence(sent, use_tokenizer=True) if is_flair else sent
-                    )
+                    processed_sentences.append(Sentence(sent, use_tokenizer=True) if is_flair else sent)
                 i += 1
             splits.append(splits[-1] + i)
         return res, processed_sentences, splits
@@ -111,14 +105,10 @@ class MentionDetection(MentionDetectionBase):
         :return: Dictionary with mentions per document.
         """
         if tagger is None:
-            raise Exception(
-                "No NER tagger is set, but you are attempting to perform Mention Detection.."
-            )
+            raise Exception('No NER tagger is set, but you are attempting to perform Mention Detection..')
         # Verify if Flair, else ngram or custom.
         is_flair = isinstance(tagger, SequenceTagger)
-        dataset_sentences_raw, processed_sentences, splits = self.split_text(
-            dataset, is_flair
-        )
+        dataset_sentences_raw, processed_sentences, splits = self.split_text(dataset, is_flair)
         results = {}
         total_ment = 0
         if is_flair:
@@ -131,19 +121,13 @@ class MentionDetection(MentionDetectionBase):
             result_doc = []
             cum_sent_length = 0
             offset = 0
-            for (idx_sent, (sentence, ground_truth_sentence)), snt in zip(
-                contents.items(), sentences
-            ):
+            for (idx_sent, (sentence, ground_truth_sentence)), snt in zip(contents.items(), sentences):
 
                 # Only include offset if using Flair.
                 if is_flair:
                     offset = raw_text.find(sentence, cum_sent_length)
 
-                for entity in (
-                    snt.get_spans("ner")
-                    if is_flair
-                    else tagger.predict(snt, processed_sentences)
-                ):
+                for entity in snt.get_spans('ner') if is_flair else tagger.predict(snt, processed_sentences):
                     text, start_pos, end_pos, conf, tag = (
                         entity.text,
                         entity.start_pos,
@@ -158,21 +142,19 @@ class MentionDetection(MentionDetectionBase):
                         continue
                     # Re-create ngram as 'text' is at times changed by Flair (e.g. double spaces are removed).
                     ngram = sentence[start_pos:end_pos]
-                    left_ctxt, right_ctxt = self.get_ctxt(
-                        start_pos, end_pos, idx_sent, sentence, sentences_doc
-                    )
+                    left_ctxt, right_ctxt = self.get_ctxt(start_pos, end_pos, idx_sent, sentence, sentences_doc)
                     res = {
-                        "mention": m,
-                        "context": (left_ctxt, right_ctxt),
-                        "candidates": cands,
-                        "gold": ["NONE"],
-                        "pos": start_pos + offset,
-                        "sent_idx": idx_sent,
-                        "ngram": ngram,
-                        "end_pos": end_pos + offset,
-                        "sentence": sentence,
-                        "conf_md": conf,
-                        "tag": tag,
+                        'mention': m,
+                        'context': (left_ctxt, right_ctxt),
+                        'candidates': cands,
+                        'gold': ['NONE'],
+                        'pos': start_pos + offset,
+                        'sent_idx': idx_sent,
+                        'ngram': ngram,
+                        'end_pos': end_pos + offset,
+                        'sentence': sentence,
+                        'conf_md': conf,
+                        'tag': tag,
                     }
                     result_doc.append(res)
                 cum_sent_length += len(sentence) + (offset - cum_sent_length)

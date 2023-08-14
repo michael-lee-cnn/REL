@@ -1,7 +1,7 @@
 import requests
 
-IP_ADDRESS = "http://127.0.0.1"
-PORT = "5555"
+IP_ADDRESS = 'http://127.0.0.1'
+PORT = '5555'
 
 text_docs = [
     """
@@ -19,13 +19,13 @@ text_docs = [
 for text_doc in text_docs:
     # Example EL.
     document = {
-        "text": text_doc,
+        'text': text_doc,
         # "spans": []
     }
 
-    API_result = requests.post("{}:{}".format(IP_ADDRESS, PORT), json=document).json()
+    API_result = requests.post('{}:{}'.format(IP_ADDRESS, PORT), json=document).json()
     for a in API_result:
         print(a)
-        print("---")
+        print('---')
     print(API_result)
-    print("=====")
+    print('=====')

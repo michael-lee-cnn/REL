@@ -1,5 +1,4 @@
 from http.server import HTTPServer
-
 # --------------------- Overwrite class
 from typing import Dict
 
@@ -15,8 +14,8 @@ from REL.entity_disambiguation import EntityDisambiguation
 from REL.ner import load_flair_ner
 from REL.server import make_handler
 
-START_TAG: str = "<START>"
-STOP_TAG: str = "<STOP>"
+START_TAG: str = '<START>'
+STOP_TAG: str = '<STOP>'
 
 
 def __init__(
@@ -32,8 +31,8 @@ def __init__(
     word_dropout: float = 0.05,
     locked_dropout: float = 0.5,
     train_initial_hidden_state: bool = False,
-    rnn_type: str = "LSTM",
-    pickle_module: str = "pickle",
+    rnn_type: str = 'LSTM',
+    pickle_module: str = 'pickle',
     beta: float = 1.0,
     loss_weights: Dict[str, float] = None,
 ):
@@ -119,7 +118,7 @@ def __init__(
     if self.use_rnn:
         num_directions = 2 if self.bidirectional else 1
 
-        if self.rnn_type in ["LSTM", "GRU"]:
+        if self.rnn_type in ['LSTM', 'GRU']:
 
             self.rnn = getattr(torch.nn, self.rnn_type)(
                 rnn_input_dim,
@@ -134,17 +133,11 @@ def __init__(
                 self.hs_initializer = torch.nn.init.xavier_normal_
 
                 self.lstm_init_h = Parameter(
-                    torch.zeros(
-                        self.nlayers * num_directions, self.hidden_size
-                    ).float(),
-                    requires_grad=True,
+                    torch.zeros(self.nlayers * num_directions, self.hidden_size).float(), requires_grad=True,
                 )
 
                 self.lstm_init_c = Parameter(
-                    torch.zeros(
-                        self.nlayers * num_directions, self.hidden_size
-                    ).float(),
-                    requires_grad=True,
+                    torch.zeros(self.nlayers * num_directions, self.hidden_size).float(), requires_grad=True,
                 )
 
                 # TODO: Decide how to initialize the hidden state variables
@@ -154,22 +147,14 @@ def __init__(
         # final linear map to tag space
         self.linear = torch.nn.Linear(hidden_size * num_directions, len(tag_dictionary))
     else:
-        self.linear = torch.nn.Linear(
-            self.embeddings.embedding_length, len(tag_dictionary)
-        )
+        self.linear = torch.nn.Linear(self.embeddings.embedding_length, len(tag_dictionary))
 
     if self.use_crf:
-        self.transitions = torch.nn.Parameter(
-            torch.zeros(self.tagset_size, self.tagset_size).float()
-        )
+        self.transitions = torch.nn.Parameter(torch.zeros(self.tagset_size, self.tagset_size).float())
 
-        self.transitions.detach()[
-            self.tag_dictionary.get_idx_for_item(START_TAG), :
-        ] = -10000
+        self.transitions.detach()[self.tag_dictionary.get_idx_for_item(START_TAG), :] = -10000
 
-        self.transitions.detach()[
-            :, self.tag_dictionary.get_idx_for_item(STOP_TAG)
-        ] = -10000
+        self.transitions.detach()[:, self.tag_dictionary.get_idx_for_item(STOP_TAG)] = -10000
 
     self.to(flair.device)
 
@@ -184,34 +169,31 @@ def user_func(text):
 
 
 # 0. Set your project url, which is used as a reference for your datasets etc.
-base_url = "C:/Users/mickv/Desktop/data_back/"
-wiki_version = "wiki_2019"
+base_url = 'C:/Users/mickv/Desktop/data_back/'
+wiki_version = 'wiki_2019'
 
 # 1. Init model, where user can set his/her own config that will overwrite the default config.
 # If mode is equal to 'eval', then the model_path should point to an existing model.
 config = {
-    "mode": "eval",
-    "model_path": "{}/{}/generated/model".format(base_url, wiki_version),
+    'mode': 'eval',
+    'model_path': '{}/{}/generated/model'.format(base_url, wiki_version),
 }
 
 model = EntityDisambiguation(base_url, wiki_version, config)
 
 # 2. Create NER-tagger.
-tagger_ner = load_flair_ner("ner-fast")
+tagger_ner = load_flair_ner('ner-fast')
 
 # 2.1. Alternatively, one can create his/her own NER-tagger that given a text,
 # returns a list with spans (start_pos, length).
 # tagger_ner = user_func
 
 # 3. Init server.
-server_address = ("192.168.178.11", 1235)
-server = HTTPServer(
-    server_address,
-    make_handler(base_url, wiki_version, model, tagger_ner, include_conf=True),
-)
+server_address = ('192.168.178.11', 1235)
+server = HTTPServer(server_address, make_handler(base_url, wiki_version, model, tagger_ner, include_conf=True),)
 
 try:
-    print("Ready for listening.")
+    print('Ready for listening.')
     server.serve_forever()
 except KeyboardInterrupt:
     exit(0)

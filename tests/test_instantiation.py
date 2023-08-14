@@ -14,20 +14,17 @@ from REL.ner import Cmns
 def test_entity_disambiguation_instantiation():
     return EntityDisambiguation(
         Path(__file__).parent,
-        "wiki_test",
-        {
-            "mode": "eval",
-            "model_path": Path(__file__).parent / "wiki_test" / "generated" / "model",
-        },
+        'wiki_test',
+        {'mode': 'eval', 'model_path': Path(__file__).parent / 'wiki_test' / 'generated' / 'model',},
     )
 
 
 def test_cmns_instantiation():
-    return Cmns(Path(__file__).parent, "wiki_test")
+    return Cmns(Path(__file__).parent, 'wiki_test')
 
 
 def test_mention_detection_instantiation():
-    return MentionDetection(Path(__file__).parent, "wiki_test")
+    return MentionDetection(Path(__file__).parent, 'wiki_test')
 
 
 def test_prerank_instantiation():
@@ -39,11 +36,11 @@ def test_prerank_instantiation():
 def test_mulrel_ranker_instantiation():
     # minimal config to make the constructor run
     config = {
-        "emb_dims": 300,
-        "hid_dims": 100,
-        "dropout_rate": 0.3,
-        "n_rels": 3,
-        "use_local": True,
-        "use_pad_ent": True,
+        'emb_dims': 300,
+        'hid_dims': 100,
+        'dropout_rate': 0.3,
+        'n_rels': 3,
+        'use_local': True,
+        'use_pad_ent': True,
     }
-    return MulRelRanker(config, torch.device("cpu"))
+    return MulRelRanker(config, torch.device('cpu'))

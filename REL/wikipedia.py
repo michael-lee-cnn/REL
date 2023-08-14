@@ -13,14 +13,11 @@ class Wikipedia:
         self.base_url = base_url + wiki_version
         # if include_wiki_id_name:
         self.wiki_disambiguation_index = self.generate_wiki_disambiguation_map()
-        print("Loaded wiki disambiguation index")
-        (
-            self.wiki_redirects_index,
-            self.wiki_redirects_id_index,
-        ) = self.generate_wiki_redirect_map()
-        print("Loaded wiki redirects index")
+        print('Loaded wiki disambiguation index')
+        (self.wiki_redirects_index, self.wiki_redirects_id_index,) = self.generate_wiki_redirect_map()
+        print('Loaded wiki redirects index')
         self.wiki_id_name_map = self.gen_wiki_name_map()
-        print("Loaded entity index")
+        print('Loaded entity index')
 
     def preprocess_ent_name(self, ent_name):
         """
@@ -30,9 +27,9 @@ class Wikipedia:
         """
         ent_name = ent_name.strip()
         ent_name = trim1(ent_name)
-        ent_name = ent_name.replace("&amp;", "&")
-        ent_name = ent_name.replace("&quot;", '"')
-        ent_name = ent_name.replace("_", " ")
+        ent_name = ent_name.replace('&amp;', '&')
+        ent_name = ent_name.replace('&quot;', '"')
+        ent_name = ent_name.replace('_', ' ')
         ent_name = first_letter_to_uppercase(ent_name)
 
         ent_name = self.wiki_redirect_ent_title(ent_name)
@@ -46,10 +43,10 @@ class Wikipedia:
         """
 
         entity = self.preprocess_ent_name(entity)
-        if not entity or (entity not in self.wiki_id_name_map["ent_name_to_id"]):
+        if not entity or (entity not in self.wiki_id_name_map['ent_name_to_id']):
             return -1
         else:
-            return self.wiki_id_name_map["ent_name_to_id"][entity]
+            return self.wiki_id_name_map['ent_name_to_id'][entity]
 
     def wiki_redirect_ent_title(self, ent_name):
         """
@@ -83,16 +80,12 @@ class Wikipedia:
         """
 
         wiki_disambiguation_index = {}
-        path = os.path.join(self.base_url, "basic_data/wiki_disambiguation_pages.txt")
+        path = os.path.join(self.base_url, 'basic_data/wiki_disambiguation_pages.txt')
 
-        with open(
-            path,
-            "r",
-            encoding="utf-8",
-        ) as f:
+        with open(path, 'r', encoding='utf-8',) as f:
             for line in f:
                 line = line.rstrip()
-                parts = line.split("\t")
+                parts = line.split('\t')
                 assert int(parts[0])
                 wiki_disambiguation_index[int(parts[0])] = 1
         return wiki_disambiguation_index
@@ -104,19 +97,19 @@ class Wikipedia:
         :return: disambiguation index
         """
 
-        wiki_id_name_map = {"ent_name_to_id": {}, "ent_id_to_name": {}}
-        path = os.path.join(self.base_url, "basic_data/wiki_name_id_map.txt")
-        with open(path, "r", encoding="utf-8") as f:
+        wiki_id_name_map = {'ent_name_to_id': {}, 'ent_id_to_name': {}}
+        path = os.path.join(self.base_url, 'basic_data/wiki_name_id_map.txt')
+        with open(path, 'r', encoding='utf-8') as f:
             for line in f:
                 line = line.rstrip()
-                parts = line.split("\t")
+                parts = line.split('\t')
 
                 ent_wiki_id = int(parts[1])
                 ent_name = unquote(parts[0])
 
                 if ent_wiki_id not in self.wiki_disambiguation_index:
-                    wiki_id_name_map["ent_name_to_id"][ent_name] = ent_wiki_id
-                    wiki_id_name_map["ent_id_to_name"][ent_wiki_id] = ent_name
+                    wiki_id_name_map['ent_name_to_id'][ent_name] = ent_wiki_id
+                    wiki_id_name_map['ent_id_to_name'][ent_wiki_id] = ent_name
         return wiki_id_name_map
 
     def generate_wiki_redirect_map(self):
@@ -127,16 +120,12 @@ class Wikipedia:
         """
         wiki_redirects_index = {}
         wiki_redirects_id_index = {}
-        path = os.path.join(self.base_url, "basic_data/wiki_redirects.txt")
+        path = os.path.join(self.base_url, 'basic_data/wiki_redirects.txt')
 
-        with open(
-            path,
-            "r",
-            encoding="utf-8",
-        ) as f:
+        with open(path, 'r', encoding='utf-8',) as f:
             for line in f:
                 line = line.rstrip()
-                parts = line.split("\t")
+                parts = line.split('\t')
                 if len(parts) < 2:
                     continue
                 parts[1] = unquote(parts[1])

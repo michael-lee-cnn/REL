@@ -29,13 +29,13 @@ class WikipediaYagoFreq:
 
         :return:
         """
-        print("Please take a break, this will take a while :).")
+        print('Please take a break, this will take a while :).')
 
         wiki_db = GenericLookup(
-            "entity_word_embedding",
-            os.path.join(self.base_url, self.wiki_version, "generated"),
-            table_name="wiki",
-            columns={"p_e_m": "blob", "lower": "text", "freq": "INTEGER"},
+            'entity_word_embedding',
+            os.path.join(self.base_url, self.wiki_version, 'generated'),
+            table_name='wiki',
+            columns={'p_e_m': 'blob', 'lower': 'text', 'freq': 'INTEGER'},
         )
 
         wiki_db.load_wiki(self.p_e_m, self.mention_freq, batch_size=50000, reset=True)
@@ -51,14 +51,12 @@ class WikipediaYagoFreq:
         self.__cross_wiki_counts()
 
         # Step 1: Calculate p(e|m) for wiki.
-        print("Filtering candidates and calculating p(e|m) values for Wikipedia.")
+        print('Filtering candidates and calculating p(e|m) values for Wikipedia.')
         for ent_mention in self.wiki_freq:
             if len(ent_mention) < 1:
                 continue
 
-            ent_wiki_names = sorted(
-                self.wiki_freq[ent_mention].items(), key=lambda kv: kv[1], reverse=True
-            )
+            ent_wiki_names = sorted(self.wiki_freq[ent_mention].items(), key=lambda kv: kv[1], reverse=True)
             # Get the sum of at most 100 candidates, but less if less are available.
             total_count = np.sum([v for k, v in ent_wiki_names][:100])
 
@@ -90,7 +88,7 @@ class WikipediaYagoFreq:
         else:
             self.custom_freq = self.__yago_counts()
 
-        print("Computing p(e|m)")
+        print('Computing p(e|m)')
         for mention in self.custom_freq:
             total = len(self.custom_freq[mention])
 
@@ -98,9 +96,7 @@ class WikipediaYagoFreq:
             if mention not in self.mention_freq:
                 self.mention_freq[mention] = 0
             self.mention_freq[mention] += 1
-            cust_ment_ent_temp = {
-                k: 1 / total for k, v in self.custom_freq[mention].items()
-            }
+            cust_ment_ent_temp = {k: 1 / total for k, v in self.custom_freq[mention].items()}
 
             if mention not in self.p_e_m:
                 self.p_e_m[mention] = cust_ment_ent_temp
@@ -111,9 +107,7 @@ class WikipediaYagoFreq:
                         self.p_e_m[mention][ent_wiki_id] = 0.0
 
                     # Assumes addition of p(e|m) as described by authors.
-                    self.p_e_m[mention][ent_wiki_id] = np.round(
-                        min(1.0, self.p_e_m[mention][ent_wiki_id] + prob), 3
-                    )
+                    self.p_e_m[mention][ent_wiki_id] = np.round(min(1.0, self.p_e_m[mention][ent_wiki_id] + prob), 3)
 
     def __yago_counts(self):
         """
@@ -123,43 +117,39 @@ class WikipediaYagoFreq:
         """
 
         num_lines = 0
-        print("Calculating Yago occurrences")
+        print('Calculating Yago occurrences')
         custom_freq = {}
-        with open(
-            os.path.join(self.base_url, "generic/p_e_m_data/aida_means.tsv"),
-            "r",
-            encoding="utf-8",
-        ) as f:
+        with open(os.path.join(self.base_url, 'generic/p_e_m_data/aida_means.tsv'), 'r', encoding='utf-8',) as f:
             for line in f:
                 num_lines += 1
 
                 if num_lines % 5000000 == 0:
-                    print("Processed {} lines.".format(num_lines))
+                    print('Processed {} lines.'.format(num_lines))
 
                 line = line.rstrip()
                 line = unquote(line)
-                parts = line.split("\t")
+                parts = line.split('\t')
                 mention = parts[0][1:-1].strip()
 
                 ent_name = parts[1].strip()
-                ent_name = ent_name.replace("&amp;", "&")
-                ent_name = ent_name.replace("&quot;", '"')
+                ent_name = ent_name.replace('&amp;', '&')
+                ent_name = ent_name.replace('&quot;', '"')
 
-                x = ent_name.find("\\u")
+                x = ent_name.find('\\u')
                 while x != -1:
                     code = ent_name[x : x + 6]
                     replace = unicode2ascii(code)
-                    if replace == "%":
-                        replace = "%%"
+                    if replace == '%':
+                        replace = '%%'
 
                     ent_name = ent_name.replace(code, replace)
-                    x = ent_name.find("\\u")
+                    x = ent_name.find('\\u')
 
                 ent_name = self.wikipedia.preprocess_ent_name(ent_name)
-                if ent_name in self.wikipedia.wiki_id_name_map["ent_name_to_id"]:
+                if ent_name in self.wikipedia.wiki_id_name_map['ent_name_to_id']:
                     if mention not in custom_freq:
                         custom_freq[mention] = {}
-                    ent_name = ent_name.replace(" ", "_")
+                    ent_name = ent_name.replace(' ', '_')
                     if ent_name not in custom_freq[mention]:
                         custom_freq[mention][ent_name] = 1
 
@@ -172,53 +162,38 @@ class WikipediaYagoFreq:
         :return:
         """
 
-        print("Updating counts by merging with CrossWiki")
+        print('Updating counts by merging with CrossWiki')
 
         cnt = 0
-        crosswiki_path = os.path.join(
-            self.base_url, "generic/p_e_m_data/crosswikis_p_e_m.txt"
-        )
+        crosswiki_path = os.path.join(self.base_url, 'generic/p_e_m_data/crosswikis_p_e_m.txt')
 
-        with open(crosswiki_path, "r", encoding="utf-8") as f:
+        with open(crosswiki_path, 'r', encoding='utf-8') as f:
             for line in f:
-                parts = line.split("\t")
+                parts = line.split('\t')
                 mention = unquote(parts[0])
 
-                if ("Wikipedia" not in mention) and ("wikipedia" not in mention):
+                if ('Wikipedia' not in mention) and ('wikipedia' not in mention):
                     if mention not in self.wiki_freq:
                         self.wiki_freq[mention] = {}
 
                     num_ents = len(parts)
                     for i in range(2, num_ents):
-                        ent_str = parts[i].split(",")
+                        ent_str = parts[i].split(',')
                         ent_wiki_id = int(ent_str[0])
                         freq_ent = int(ent_str[1])
 
-                        if (
-                            ent_wiki_id
-                            not in self.wikipedia.wiki_id_name_map["ent_id_to_name"]
-                        ):
+                        if ent_wiki_id not in self.wikipedia.wiki_id_name_map['ent_id_to_name']:
                             ent_name_re = self.wikipedia.wiki_redirect_id(ent_wiki_id)
-                            if (
-                                ent_name_re
-                                in self.wikipedia.wiki_id_name_map["ent_name_to_id"]
-                            ):
-                                ent_wiki_id = self.wikipedia.wiki_id_name_map[
-                                    "ent_name_to_id"
-                                ][ent_name_re]
+                            if ent_name_re in self.wikipedia.wiki_id_name_map['ent_name_to_id']:
+                                ent_wiki_id = self.wikipedia.wiki_id_name_map['ent_name_to_id'][ent_name_re]
 
                         cnt += 1
-                        if (
-                            ent_wiki_id
-                            in self.wikipedia.wiki_id_name_map["ent_id_to_name"]
-                        ):
+                        if ent_wiki_id in self.wikipedia.wiki_id_name_map['ent_id_to_name']:
                             if mention not in self.mention_freq:
                                 self.mention_freq[mention] = 0
                             self.mention_freq[mention] += freq_ent
 
-                            ent_name = self.wikipedia.wiki_id_name_map[
-                                "ent_id_to_name"
-                            ][ent_wiki_id].replace(" ", "_")
+                            ent_name = self.wikipedia.wiki_id_name_map['ent_id_to_name'][ent_wiki_id].replace(' ', '_')
                             if ent_name not in self.wiki_freq[mention]:
                                 self.wiki_freq[mention][ent_name] = 0
                             self.wiki_freq[mention][ent_name] += freq_ent
@@ -234,34 +209,23 @@ class WikipediaYagoFreq:
         num_valid_hyperlinks = 0
         disambiguation_ent_errors = 0
 
-        print("Calculating Wikipedia mention/entity occurrences")
+        print('Calculating Wikipedia mention/entity occurrences')
 
         last_processed_id = -1
         exist_id_found = False
 
-        wiki_anchor_files = os.listdir(
-            os.path.join(self.base_url, self.wiki_version, "basic_data/anchor_files/")
-        )
+        wiki_anchor_files = os.listdir(os.path.join(self.base_url, self.wiki_version, 'basic_data/anchor_files/'))
         for wiki_anchor in wiki_anchor_files:
-            wiki_file = os.path.join(
-                self.base_url,
-                self.wiki_version,
-                "basic_data/anchor_files/",
-                wiki_anchor,
-            )
+            wiki_file = os.path.join(self.base_url, self.wiki_version, 'basic_data/anchor_files/', wiki_anchor,)
 
-            with open(wiki_file, "r", encoding="utf-8") as f:
+            with open(wiki_file, 'r', encoding='utf-8') as f:
                 for line in f:
                     num_lines += 1
 
                     if num_lines % 5000000 == 0:
-                        print(
-                            "Processed {} lines, valid hyperlinks {}".format(
-                                num_lines, num_valid_hyperlinks
-                            )
-                        )
+                        print('Processed {} lines, valid hyperlinks {}'.format(num_lines, num_valid_hyperlinks))
                     if '<doc id="' in line:
-                        id = int(line[line.find("id") + 4 : line.find("url") - 2])
+                        id = int(line[line.find('id') + 4 : line.find('url') - 2])
                         if id <= last_processed_id:
                             exist_id_found = True
                             continue
@@ -270,42 +234,31 @@ class WikipediaYagoFreq:
                             last_processed_id = id
                     else:
                         if not exist_id_found:
-                            (
-                                list_hyp,
-                                disambiguation_ent_error,
-                                print_values,
-                            ) = self.__extract_text_and_hyp(line)
+                            (list_hyp, disambiguation_ent_error, print_values,) = self.__extract_text_and_hyp(line)
 
                             disambiguation_ent_errors += disambiguation_ent_error
 
                             for el in list_hyp:
-                                mention = el["mention"]
-                                ent_wiki_id = el["ent_wikiid"]
+                                mention = el['mention']
+                                ent_wiki_id = el['ent_wikiid']
 
                                 num_valid_hyperlinks += 1
                                 if mention not in self.wiki_freq:
                                     self.wiki_freq[mention] = {}
 
-                                if (
-                                    ent_wiki_id
-                                    in self.wikipedia.wiki_id_name_map["ent_id_to_name"]
-                                ):
+                                if ent_wiki_id in self.wikipedia.wiki_id_name_map['ent_id_to_name']:
                                     if mention not in self.mention_freq:
                                         self.mention_freq[mention] = 0
                                     self.mention_freq[mention] += 1
 
-                                    ent_name = self.wikipedia.wiki_id_name_map[
-                                        "ent_id_to_name"
-                                    ][ent_wiki_id].replace(" ", "_")
+                                    ent_name = self.wikipedia.wiki_id_name_map['ent_id_to_name'][ent_wiki_id].replace(
+                                        ' ', '_'
+                                    )
                                     if ent_name not in self.wiki_freq[mention]:
                                         self.wiki_freq[mention][ent_name] = 0
                                     self.wiki_freq[mention][ent_name] += 1
 
-        print(
-            "Done computing Wikipedia counts. Num valid hyperlinks = {}".format(
-                num_valid_hyperlinks
-            )
-        )
+        print('Done computing Wikipedia counts. Num valid hyperlinks = {}'.format(num_valid_hyperlinks))
 
     def __extract_text_and_hyp(self, line):
         """
@@ -319,7 +272,7 @@ class WikipediaYagoFreq:
         num_mentions = 0
         start_entities = [m.start() for m in re.finditer('<a href="', line)]
         end_entities = [m.start() for m in re.finditer('">', line)]
-        end_mentions = [m.start() for m in re.finditer("</a>", line)]
+        end_mentions = [m.start() for m in re.finditer('</a>', line)]
 
         disambiguation_ent_errors = 0
         start_entity = line.find('<a href="')
@@ -327,33 +280,25 @@ class WikipediaYagoFreq:
         while start_entity >= 0:
             line = line[start_entity + len('<a href="') :]
             end_entity = line.find('">')
-            end_mention = line.find("</a>")
+            end_mention = line.find('</a>')
             mention = line[end_entity + len('">') : end_mention]
 
-            if (
-                ("Wikipedia" not in mention)
-                and ("wikipedia" not in mention)
-                and (len(mention) >= 1)
-            ):
+            if ('Wikipedia' not in mention) and ('wikipedia' not in mention) and (len(mention) >= 1):
                 # Valid mention
                 entity = line[0:end_entity]
-                find_wikt = entity.find("wikt:")
-                entity = entity[len("wikt:") :] if find_wikt == 0 else entity
+                find_wikt = entity.find('wikt:')
+                entity = entity[len('wikt:') :] if find_wikt == 0 else entity
                 entity = self.wikipedia.preprocess_ent_name(entity)
 
-                if entity.find("List of ") != 0:
-                    if "#" not in entity:
+                if entity.find('List of ') != 0:
+                    if '#' not in entity:
                         ent_wiki_id = self.wikipedia.ent_wiki_id_from_name(entity)
                         if ent_wiki_id == -1:
                             disambiguation_ent_errors += 1
                         else:
                             num_mentions += 1
                             list_hyp.append(
-                                {
-                                    "mention": mention,
-                                    "ent_wikiid": ent_wiki_id,
-                                    "cnt": num_mentions,
-                                }
+                                {'mention': mention, 'ent_wikiid': ent_wiki_id, 'cnt': num_mentions,}
                             )
             # find new entity
             start_entity = line.find('<a href="')

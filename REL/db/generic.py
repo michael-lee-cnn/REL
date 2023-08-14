@@ -11,12 +11,7 @@ from REL.db.base import DB
 
 class GenericLookup(DB):
     def __init__(
-        self,
-        name,
-        save_dir,
-        table_name="embeddings",
-        d_emb=300,
-        columns={"emb": "blob"},
+        self, name, save_dir, table_name='embeddings', d_emb=300, columns={'emb': 'blob'},
     ):
         """
         Args:
@@ -25,11 +20,11 @@ class GenericLookup(DB):
             show_progress: whether to print progress.
         """
         self.avg_cnt = {
-            "word": {"cnt": 0, "sum": zeros(d_emb)},
-            "entity": {"cnt": 0, "sum": zeros(d_emb)},
+            'word': {'cnt': 0, 'sum': zeros(d_emb)},
+            'entity': {'cnt': 0, 'sum': zeros(d_emb)},
         }
 
-        path_db = os.path.join(save_dir, f"{name}.db")
+        path_db = os.path.join(save_dir, f'{name}.db')
 
         self.d_emb = d_emb
         self.name = name
@@ -41,7 +36,7 @@ class GenericLookup(DB):
         g = self.lookup(words, table_name)
         return g
 
-    def wiki(self, mention, table_name, column_name="p_e_m"):
+    def wiki(self, mention, table_name, column_name='p_e_m'):
         g = self.lookup_wik(mention, table_name, column_name)
         return g
 
@@ -54,31 +49,22 @@ class GenericLookup(DB):
         start = time()
 
         # Loop over file.
-        with utils.open(file_name, "rb") as fin:
+        with utils.open(file_name, 'rb') as fin:
             # Determine size file.
-            header = utils.to_unicode(fin.readline(), encoding="utf-8")
-            vocab_size, vector_size = (
-                int(x) for x in header.split()
-            )  # throws for invalid file format
+            header = utils.to_unicode(fin.readline(), encoding='utf-8')
+            vocab_size, vector_size = (int(x) for x in header.split())  # throws for invalid file format
             if limit < vocab_size:
                 vocab_size = limit
 
             for line_no in range(vocab_size):
                 line = fin.readline()
                 if line == b"":
-                    raise EOFError(
-                        "unexpected end of input; is count incorrect or file otherwise damaged?"
-                    )
+                    raise EOFError('unexpected end of input; is count incorrect or file otherwise damaged?')
 
-                parts = utils.to_unicode(
-                    line.rstrip(), encoding="utf-8", errors="strict"
-                ).split(" ")
+                parts = utils.to_unicode(line.rstrip(), encoding='utf-8', errors='strict').split(' ')
 
                 if len(parts) != vector_size + 1:
-                    raise ValueError(
-                        "invalid vector on line %s (is this really the text format?)"
-                        % line_no
-                    )
+                    raise ValueError('invalid vector on line %s (is this really the text format?)' % line_no)
 
                 word, vec = parts[0], np.array([REAL(x) for x in parts[1:]])
 
@@ -88,28 +74,23 @@ class GenericLookup(DB):
                 self.seen.add(word)
                 batch.append((word, vec))
 
-                if "ENTITY/" in word:
-                    self.avg_cnt["entity"]["cnt"] += 1
-                    self.avg_cnt["entity"]["sum"] += vec
+                if 'ENTITY/' in word:
+                    self.avg_cnt['entity']['cnt'] += 1
+                    self.avg_cnt['entity']['sum'] += vec
                 else:
-                    self.avg_cnt["word"]["cnt"] += 1
-                    self.avg_cnt["word"]["sum"] += vec
+                    self.avg_cnt['word']['cnt'] += 1
+                    self.avg_cnt['word']['sum'] += vec
 
                 if len(batch) == batch_size:
-                    print("Another {}".format(batch_size), line_no, time() - start)
+                    print('Another {}'.format(batch_size), line_no, time() - start)
                     start = time()
                     self.insert_batch_emb(batch)
                     batch.clear()
 
-        for x in ["entity", "word"]:
-            if self.avg_cnt[x]["cnt"] > 0:
-                batch.append(
-                    (
-                        "#{}/UNK#".format(x.upper()),
-                        self.avg_cnt[x]["sum"] / self.avg_cnt[x]["cnt"],
-                    )
-                )
-                print("Added #{}/UNK#".format(x.upper()))
+        for x in ['entity', 'word']:
+            if self.avg_cnt[x]['cnt'] > 0:
+                batch.append(('#{}/UNK#'.format(x.upper()), self.avg_cnt[x]['sum'] / self.avg_cnt[x]['cnt'],))
+                print('Added #{}/UNK#'.format(x.upper()))
 
         if batch:
             self.insert_batch_emb(batch)
@@ -128,7 +109,7 @@ class GenericLookup(DB):
             batch.append((ment, p_e_m, ment.lower(), mention_total_freq[ment]))
 
             if len(batch) == batch_size:
-                print("Another {}".format(batch_size), time() - start)
+                print('Another {}'.format(batch_size), time() - start)
                 start = time()
                 self.insert_batch_wiki(batch)
                 batch.clear()
@@ -139,8 +120,8 @@ class GenericLookup(DB):
         self.create_index()
 
 
-if __name__ == "__main__":
-    save_dir = "C:/Users/mickv/Desktop/data_back/wiki_2019/generated"
+if __name__ == '__main__':
+    save_dir = 'C:/Users/mickv/Desktop/data_back/wiki_2019/generated'
 
     # Test data
     # ent_p_e_m_index = {
@@ -160,16 +141,10 @@ if __name__ == "__main__":
     # lowercase = wiki.wiki("Netherlands".lower(), "wiki", "lower")
 
     # Embedding load.
-    emb = GenericLookup(
-        "entity_word_embedding", save_dir=save_dir, table_name="embeddings"
-    )
-    emb.load_word2emb(
-        "D:/enwiki-20190701-model-w2v-dim300", batch_size=5000, reset=True
-    )
+    emb = GenericLookup('entity_word_embedding', save_dir=save_dir, table_name='embeddings')
+    emb.load_word2emb('D:/enwiki-20190701-model-w2v-dim300', batch_size=5000, reset=True)
 
     # Query
     import torch
 
-    embeddings = torch.stack(
-        [torch.tensor(e) for e in emb.emb(["in", "the", "end"], "embeddings")]
-    )
+    embeddings = torch.stack([torch.tensor(e) for e in emb.emb(['in', 'the', 'end'], 'embeddings')])
