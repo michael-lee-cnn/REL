@@ -85,11 +85,9 @@ class MulRelRanker(torch.nn.Module):
         self.ew_embs = torch.nn.Parameter(torch.randn(self.config['n_rels'], self.config['emb_dims']) * 0.01)
         self._coh_ctx_vecs = None
 
-        # self.score_combine = torch.nn.Sequential(
-        #     torch.nn.Linear(2, self.config["hid_dims"]),
-        #     torch.nn.ReLU(),
-        #     torch.nn.Linear(self.config["hid_dims"], 1),
-        # )
+        self.score_combine = torch.nn.Sequential(
+            torch.nn.Linear(2, self.config['hid_dims']), torch.nn.ReLU(), torch.nn.Linear(self.config['hid_dims'], 1),
+        )
 
     def __local_ent_scores(self, token_ids, tok_mask, entity_ids, entity_mask, embeddings, p_e_m=None):
         """
@@ -283,7 +281,7 @@ class MulRelRanker(torch.nn.Module):
         inputs = torch.cat(
             [ent_scores.view(n_ments * n_cands, -1), torch.log(p_e_m + 1e-20).view(n_ments * n_cands, -1),], dim=1,
         )
-        # scores = self.score_combine(inputs).view(n_ments, n_cands)
+        scores = self.score_combine(inputs).view(n_ments, n_cands)
         scores = F.softmax(scores, dim=1)
 
         if self.config['use_pad_ent']:
