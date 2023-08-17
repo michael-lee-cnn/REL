@@ -336,36 +336,37 @@ class EntityDisambiguation:
 
         :return: -
         """
-        print(os.path.join(model_path_lr, 'lr_model.pkl'))
+        return
+        # print(os.path.join(model_path_lr, 'lr_model.pkl'))
 
-        train_dataset = self.get_data_items(datasets['aida_train'], 'train', predict=False)
+        # train_dataset = self.get_data_items(datasets['aida_train'], 'train', predict=False)
 
-        dev_datasets = []
-        for dname, data in list(datasets.items()):
-            if dname == 'aida_train':
-                continue
-            dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
+        # dev_datasets = []
+        # for dname, data in list(datasets.items()):
+        #     if dname == 'aida_train':
+        #         continue
+        #     dev_datasets.append((dname, self.get_data_items(data, dname, predict=True)))
 
-        model = LogisticRegression()
+        # model = LogisticRegression()
 
-        predictions = self.__predict(train_dataset, eval_raw=True)
-        X, y, meta = self.__create_dataset_LR(datasets, predictions, 'aida_train')
-        model.fit(X, y)
+        # predictions = self.__predict(train_dataset, eval_raw=True)
+        # X, y, meta = self.__create_dataset_LR(datasets, predictions, 'aida_train')
+        # model.fit(X, y)
 
-        for dname, data in dev_datasets:
-            predictions = self.__predict(data, eval_raw=True)
-            X, y, meta = self.__create_dataset_LR(datasets, predictions, dname)
-            preds = model.predict_proba(X)
-            preds = np.array([x[1] for x in preds])
+        # for dname, data in dev_datasets:
+        #     predictions = self.__predict(data, eval_raw=True)
+        #     X, y, meta = self.__create_dataset_LR(datasets, predictions, dname)
+        #     preds = model.predict_proba(X)
+        #     preds = np.array([x[1] for x in preds])
 
-            decisions = (preds >= threshold).astype(int)
+        #     decisions = (preds >= threshold).astype(int)
 
-            print(utils.tokgreen('{}, F1-score: {}'.format(dname, f1_score(y, decisions))))
+        #     print(utils.tokgreen('{}, F1-score: {}'.format(dname, f1_score(y, decisions))))
 
-        if store_offline:
-            path = os.path.join(model_path_lr, 'lr_model.pkl')
-            with open(path, 'wb') as handle:
-                pkl.dump(model, handle, protocol=pkl.HIGHEST_PROTOCOL)
+        # if store_offline:
+        #     path = os.path.join(model_path_lr, 'lr_model.pkl')
+        #     with open(path, 'wb') as handle:
+        #         pkl.dump(model, handle, protocol=pkl.HIGHEST_PROTOCOL)
 
     def predict(self, data):
         """
@@ -408,13 +409,14 @@ class EntityDisambiguation:
 
         :return:
         """
-        X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
-        if self.model_lr:
-            preds = self.model_lr.predict_proba(X)
-            confidence_scores = [x[1] for x in preds]
-        else:
-            confidence_scores = [0.0 for _ in scores]
-        return confidence_scores
+        return scores[:, 0]
+        # X = np.array([[score[pred]] for score, pred in zip(scores, preds)])
+        # if self.model_lr:
+        #     preds = self.model_lr.predict_proba(X)
+        #     confidence_scores = [x[1] for x in preds]
+        # else:
+        #     confidence_scores = [0.0 for _ in scores]
+        # return confidence_scores
 
     def __predict(self, data, include_timing=False, eval_raw=False):
         """
@@ -473,7 +475,8 @@ class EntityDisambiguation:
             scores = scores.cpu().data.numpy()
 
             confidence_scores = self.__compute_confidence(scores, pred_ids)
-            pred_ids = np.argmax(scores, axis=1)
+            # pred_ids = np.argmax(scores, axis=1)
+            pred_ids = np.zeros(len(confidence_scores))
 
             if not eval_raw:
                 pred_entities = [
