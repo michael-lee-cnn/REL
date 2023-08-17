@@ -476,7 +476,7 @@ class EntityDisambiguation:
 
             confidence_scores = self.__compute_confidence(scores, pred_ids)
             # pred_ids = np.argmax(scores, axis=1)
-            pred_ids = np.zeros(len(confidence_scores))
+            pred_ids = np.zeros(len(confidence_scores), dtype=int)
 
             if not eval_raw:
                 pred_entities = [
